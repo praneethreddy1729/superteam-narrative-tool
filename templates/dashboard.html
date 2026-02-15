@@ -1,443 +1,1864 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solana Narrative Detector</title>
-    <style>
-        :root {
-            --bg: #0a0b0f;
-            --surface: #12131a;
-            --surface2: #1a1b25;
-            --border: #2a2b3a;
-            --text: #e4e4ed;
-            --text-dim: #8888a0;
-            --accent: #9945FF;
-            --accent2: #14F195;
-            --gradient: linear-gradient(135deg, #9945FF, #14F195);
-            --red: #ff4d6a;
-            --green: #14F195;
-            --yellow: #ffd93d;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-        }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solana Narrative Radar — Real-Time Ecosystem Intelligence</title>
 
-        header {
-            padding: 40px 0 30px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 30px;
-        }
-        header h1 {
-            font-size: 2rem;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
-        }
-        header .subtitle { color: var(--text-dim); font-size: 0.95rem; }
-        .meta-row {
-            display: flex;
-            gap: 24px;
-            margin-top: 16px;
-            flex-wrap: wrap;
-        }
-        .meta-item {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px 20px;
-            font-size: 0.85rem;
-        }
-        .meta-item .label { color: var(--text-dim); margin-bottom: 4px; }
-        .meta-item .value { font-weight: 600; font-size: 1.1rem; }
+<!-- OG Meta Tags -->
+<meta property="og:title" content="Solana Narrative Radar — Ecosystem Intelligence Dashboard">
+<meta property="og:description" content="Real-time narrative detection across GitHub, DeFi, and social signals on Solana. Discover what builders are building before the market catches on.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://solana.com/src/img/branding/solanaLogoMark.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Solana Narrative Radar">
+<meta name="twitter:description" content="Real-time narrative detection across GitHub, DeFi, and social signals on Solana.">
+<meta name="description" content="Multi-source narrative detection for the Solana ecosystem. Tracks developer activity, DeFi metrics, and community discourse to surface emerging trends.">
 
-        section { margin-bottom: 40px; }
-        section h2 {
-            font-size: 1.3rem;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        section h2 .badge {
-            background: var(--gradient);
-            color: #000;
-            font-size: 0.7rem;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-weight: 700;
-        }
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        .narrative-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 16px;
-            transition: border-color 0.2s;
-        }
-        .narrative-card:hover { border-color: var(--accent); }
-        .narrative-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
-        }
-        .narrative-title { font-size: 1.15rem; font-weight: 600; }
-        .narrative-score {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 4px 12px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .narrative-score.high { color: var(--green); border-color: var(--green); }
-        .narrative-score.medium { color: var(--yellow); border-color: var(--yellow); }
-        .narrative-score.low { color: var(--text-dim); }
-        .signal-list { margin-top: 12px; }
-        .signal-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            margin-bottom: 6px;
-            font-size: 0.88rem;
-            color: var(--text-dim);
-        }
-        .signal-source {
-            background: var(--surface2);
-            border-radius: 4px;
-            padding: 1px 6px;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-        .signal-source.github { color: var(--accent); }
-        .signal-source.onchain, .signal-source.defi { color: var(--accent2); }
-        .signal-source.market { color: var(--yellow); }
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .idea-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 16px;
-        }
-        .idea-card:hover { border-color: var(--accent2); }
-        .idea-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--accent2);
-            margin-bottom: 8px;
-        }
-        .idea-narrative {
-            font-size: 0.8rem;
-            color: var(--accent);
-            margin-bottom: 10px;
-            background: var(--surface2);
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
-        .idea-description { font-size: 0.9rem; color: var(--text-dim); margin-bottom: 12px; }
-        .idea-meta {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-        }
-        .idea-meta-item {
-            background: var(--surface2);
-            border-radius: 6px;
-            padding: 10px 14px;
-        }
-        .idea-meta-item .label {
-            font-size: 0.75rem;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-        .idea-meta-item .value { font-size: 0.85rem; }
+:root {
+  --sol-purple: #9945FF;
+  --sol-green: #14F195;
+  --sol-gradient: linear-gradient(135deg, #9945FF 0%, #14F195 100%);
+  --sol-gradient-h: linear-gradient(90deg, #9945FF 0%, #14F195 100%);
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #16161f;
+  --bg-card-hover: #1c1c28;
+  --bg-surface: #1e1e2a;
+  --border-color: #2a2a3a;
+  --border-accent: #3a3a4f;
+  --text-primary: #e8e8f0;
+  --text-secondary: #9898aa;
+  --text-muted: #6a6a7a;
+  --success: #14F195;
+  --warning: #f0b429;
+  --danger: #ef4444;
+  --info: #38bdf8;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 48px rgba(0,0,0,0.5);
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-        .data-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 16px;
-        }
-        .data-panel {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-        }
-        .data-panel h3 {
-            font-size: 1rem;
-            margin-bottom: 12px;
-            color: var(--text);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-        th {
-            text-align: left;
-            color: var(--text-dim);
-            font-weight: 600;
-            padding: 6px 8px;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-        }
-        td {
-            padding: 6px 8px;
-            border-bottom: 1px solid var(--border);
-        }
-        .positive { color: var(--green); }
-        .negative { color: var(--red); }
+html { scroll-behavior: smooth; }
 
-        .refresh-btn {
-            background: var(--gradient);
-            color: #000;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        .refresh-btn:hover { opacity: 0.9; }
-        .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
 
-        footer {
-            border-top: 1px solid var(--border);
-            padding: 20px 0;
-            color: var(--text-dim);
-            font-size: 0.8rem;
-            text-align: center;
-        }
-        footer a { color: var(--accent); text-decoration: none; }
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border-accent); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--sol-purple); }
 
-        @media (max-width: 768px) {
-            .container { padding: 12px; }
-            header h1 { font-size: 1.5rem; }
-            .meta-row { gap: 10px; }
-            .data-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+/* ===== LOADING OVERLAY ===== */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: var(--bg-primary);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 10000;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+.loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+.loading-spinner {
+  width: 48px; height: 48px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--sol-purple);
+  border-right-color: var(--sol-green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text {
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+/* ===== STICKY HEADER ===== */
+.sticky-header {
+  position: sticky; top: 0; z-index: 1000;
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 24px;
+  transition: box-shadow var(--transition);
+}
+.sticky-header.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.5); }
+
+.header-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+}
+
+.header-brand {
+  display: flex; align-items: center; gap: 12px;
+}
+.header-logo {
+  width: 28px; height: 28px;
+  background: var(--sol-gradient);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 14px; color: #000;
+}
+.header-title {
+  font-size: 16px; font-weight: 700;
+  background: var(--sol-gradient-h);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.3px;
+}
+.header-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 8px;
+  padding-left: 8px;
+  border-left: 1px solid var(--border-color);
+}
+
+.header-stats {
+  display: flex; align-items: center; gap: 20px;
+}
+.header-stat {
+  display: flex; flex-direction: column; align-items: flex-end;
+}
+.header-stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+.header-stat-value {
+  font-size: 14px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.header-stat-value.green { color: var(--sol-green); }
+.header-stat-value.purple { color: var(--sol-purple); }
+
+/* ===== MAIN CONTAINER ===== */
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+/* ===== HERO SECTION ===== */
+.hero {
+  position: relative;
+  margin-bottom: 48px;
+  padding: 48px 0 32px;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; left: -200px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(153,69,255,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  top: -40px; right: -200px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(20,241,149,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-eyebrow {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--sol-green);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.hero h1 {
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  line-height: 1.1;
+  margin-bottom: 12px;
+}
+.hero h1 .gradient-text {
+  background: var(--sol-gradient-h);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-description {
+  font-size: 16px;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin-bottom: 32px;
+}
+.hero-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.hero-meta span { margin-right: 16px; }
+
+/* ===== STAT CARDS GRID ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--transition), transform var(--transition);
+}
+.stat-card:hover {
+  border-color: var(--border-accent);
+  transform: translateY(-2px);
+}
+.stat-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--sol-gradient-h);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.stat-card:hover::before { opacity: 1; }
+
+.stat-card-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.stat-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+}
+.stat-card-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* ===== SECTION HEADERS ===== */
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.section-title .accent {
+  background: var(--sol-gradient-h);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.section-count {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== NARRATIVE CARDS ===== */
+.narratives-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 20px;
+  margin-bottom: 48px;
+}
+
+.narrative-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.narrative-card:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow);
+}
+
+.narrative-card-header {
+  padding: 20px 20px 16px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px;
+}
+
+.narrative-info { flex: 1; min-width: 0; }
+.narrative-name {
+  font-size: 17px; font-weight: 700;
+  margin-bottom: 6px;
+  display: flex; align-items: center; gap: 8px;
+}
+.narrative-meta {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap;
+}
+
+.narrative-score-ring {
+  width: 56px; height: 56px;
+  position: relative;
+  flex-shrink: 0;
+}
+.narrative-score-ring svg {
+  width: 56px; height: 56px;
+  transform: rotate(-90deg);
+}
+.narrative-score-ring .ring-bg {
+  fill: none; stroke: var(--border-color); stroke-width: 4;
+}
+.narrative-score-ring .ring-fg {
+  fill: none; stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s ease;
+}
+.narrative-score-label {
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Delta badges */
+.delta-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.delta-badge.rising { background: rgba(20,241,149,0.12); color: var(--sol-green); }
+.delta-badge.fading { background: rgba(239,68,68,0.12); color: var(--danger); }
+.delta-badge.stable { background: rgba(152,152,170,0.12); color: var(--text-secondary); }
+.delta-badge.new { background: rgba(153,69,255,0.15); color: var(--sol-purple); }
+
+.signal-count {
+  font-size: 12px; color: var(--text-muted);
+}
+
+.source-badges {
+  display: flex; gap: 4px; flex-wrap: wrap;
+}
+.source-badge {
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.source-badge.github { background: rgba(110,84,148,0.2); color: #c9b1ff; }
+.source-badge.defi { background: rgba(20,241,149,0.1); color: #14F195; }
+.source-badge.social { background: rgba(56,189,248,0.12); color: #38bdf8; }
+.source-badge.onchain { background: rgba(240,180,41,0.12); color: #f0b429; }
+
+.discovered-badge {
+  font-size: 9px; font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(153,69,255,0.2);
+  color: var(--sol-purple);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Expandable signals */
+.narrative-signals {
+  border-top: 1px solid var(--border-color);
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+.narrative-card.expanded .narrative-signals {
+  max-height: 600px;
+}
+
+.signal-toggle {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 10px;
+  background: rgba(255,255,255,0.02);
+  border: none; border-top: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color var(--transition), background var(--transition);
+  font-family: inherit;
+}
+.signal-toggle:hover { color: var(--text-secondary); background: rgba(255,255,255,0.04); }
+.signal-toggle .chevron {
+  display: inline-block;
+  margin-left: 6px;
+  transition: transform 0.3s ease;
+}
+.narrative-card.expanded .signal-toggle .chevron { transform: rotate(180deg); }
+
+.signals-list { padding: 16px 20px; }
+.signal-item {
+  display: flex; gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 13px;
+}
+.signal-item:last-child { border-bottom: none; }
+.signal-source-tag {
+  flex-shrink: 0;
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  width: 60px;
+  padding-top: 2px;
+}
+.signal-text { color: var(--text-secondary); flex: 1; }
+.signal-strength {
+  flex-shrink: 0;
+  font-size: 12px; font-weight: 600;
+  color: var(--sol-green);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Score change indicator */
+.score-change {
+  font-size: 11px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.score-change.positive { color: var(--sol-green); }
+.score-change.negative { color: var(--danger); }
+
+/* ===== IDEAS SECTION ===== */
+.ideas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 20px;
+  margin-bottom: 48px;
+}
+
+.idea-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex; flex-direction: column;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  position: relative;
+}
+.idea-card:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow);
+}
+.idea-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--sol-gradient-h);
+  border-radius: var(--radius) var(--radius) 0 0;
+  opacity: 0.6;
+}
+
+.idea-number {
+  font-size: 11px; font-weight: 700;
+  color: var(--sol-purple);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.idea-title {
+  font-size: 18px; font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
+  line-height: 1.3;
+}
+.idea-description {
+  font-size: 14px; color: var(--text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.6;
+  flex: 1;
+}
+
+.idea-details {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.idea-detail-label {
+  font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.idea-detail-value {
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.5;
+}
+.idea-detail.full-width { grid-column: 1 / -1; }
+
+.idea-narrative-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  background: rgba(153,69,255,0.1);
+  border: 1px solid rgba(153,69,255,0.2);
+  border-radius: var(--radius-xs);
+  font-size: 12px; font-weight: 600;
+  color: var(--sol-purple);
+}
+.idea-narrative-score {
+  font-variant-numeric: tabular-nums;
+  color: var(--sol-green);
+}
+
+/* ===== CHARTS SECTION ===== */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 48px;
+}
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.chart-card.full-width { grid-column: 1 / -1; }
+.chart-title {
+  font-size: 14px; font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+.chart-container {
+  position: relative;
+  width: 100%;
+}
+.chart-container.bar-chart { height: auto; min-height: 200px; }
+.chart-container canvas { width: 100% !important; }
+
+/* ===== DATA TABLES ===== */
+.data-section { margin-bottom: 48px; }
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 20px;
+}
+
+.data-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.data-panel-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.data-panel-count {
+  font-size: 11px; color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.data-table th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(255,255,255,0.02);
+}
+.data-table td {
+  padding: 10px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  vertical-align: top;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.data-table .name-cell {
+  font-weight: 600;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.data-table .number-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.data-table .change-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.data-table .change-cell.positive { color: var(--sol-green); }
+.data-table .change-cell.negative { color: var(--danger); }
+.data-table .muted { color: var(--text-muted); }
+
+.tag-list {
+  display: flex; gap: 4px; flex-wrap: wrap;
+}
+.tag {
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text-secondary);
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* ===== FOOTER ===== */
+.footer {
+  text-align: center;
+  padding: 32px 0;
+  border-top: 1px solid var(--border-color);
+  margin-top: 48px;
+}
+.footer-text {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.footer-text a {
+  color: var(--sol-purple);
+  text-decoration: none;
+}
+.footer-text a:hover { text-decoration: underline; }
+.footer-brand {
+  font-size: 14px; font-weight: 700;
+  background: var(--sol-gradient-h);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+/* ===== NAV PILLS ===== */
+.nav-pills {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.nav-pill {
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all var(--transition);
+  text-decoration: none;
+  font-family: inherit;
+}
+.nav-pill:hover {
+  border-color: var(--border-accent);
+  color: var(--text-primary);
+}
+.nav-pill.active {
+  background: rgba(153,69,255,0.15);
+  border-color: rgba(153,69,255,0.3);
+  color: var(--sol-purple);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .charts-grid { grid-template-columns: 1fr; }
+  .charts-grid .chart-card.full-width { grid-column: 1; }
+}
+
+@media (max-width: 768px) {
+  .container { padding: 20px 16px 60px; }
+  .narratives-grid { grid-template-columns: 1fr; }
+  .ideas-grid { grid-template-columns: 1fr; }
+  .data-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .header-stats { display: none; }
+  .header-subtitle { display: none; }
+  .hero h1 { font-size: 28px; }
+  .idea-details { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-card { padding: 14px; }
+  .stat-card-value { font-size: 22px; }
+}
+
+/* ===== UTILITY ===== */
+.text-green { color: var(--sol-green); }
+.text-purple { color: var(--sol-purple); }
+.text-muted { color: var(--text-muted); }
+.text-warning { color: var(--warning); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-in {
+  animation: fadeInUp 0.5s ease forwards;
+  opacity: 0;
+}
+.animate-in:nth-child(1) { animation-delay: 0.05s; }
+.animate-in:nth-child(2) { animation-delay: 0.1s; }
+.animate-in:nth-child(3) { animation-delay: 0.15s; }
+.animate-in:nth-child(4) { animation-delay: 0.2s; }
+.animate-in:nth-child(5) { animation-delay: 0.25s; }
+.animate-in:nth-child(6) { animation-delay: 0.3s; }
+.animate-in:nth-child(7) { animation-delay: 0.35s; }
+.animate-in:nth-child(8) { animation-delay: 0.4s; }
+
+/* ===== GLOW EFFECT on hero stat cards ===== */
+.stat-card.glow-green { border-color: rgba(20,241,149,0.25); }
+.stat-card.glow-purple { border-color: rgba(153,69,255,0.25); }
+
+/* ===== SCORE BAR INLINE ===== */
+.score-bar-container {
+  flex: 1;
+  height: 6px;
+  background: var(--border-color);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.score-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s ease;
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Solana Narrative Detector</h1>
-            <p class="subtitle">AI-powered detection of emerging narratives and build ideas in the Solana ecosystem — refreshed fortnightly</p>
-            <div class="meta-row">
-                <div class="meta-item">
-                    <div class="label">Generated</div>
-                    <div class="value" id="gen-time">{{ data.generated_at[:16] }}Z</div>
-                </div>
-                <div class="meta-item">
-                    <div class="label">Analysis Period</div>
-                    <div class="value">{{ data.period }}</div>
-                </div>
-                <div class="meta-item">
-                    <div class="label">Solana TVL</div>
-                    <div class="value">
-                        {% if data.data_sources.onchain.tvl_current %}
-                            ${{ "%.2f"|format(data.data_sources.onchain.tvl_current / 1000000000) }}B
-                        {% else %}
-                            N/A
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="meta-item">
-                    <div class="label">Avg TPS</div>
-                    <div class="value">{{ data.data_sources.onchain.avg_tps or "N/A" }}</div>
-                </div>
-                <div class="meta-item">
-                    <div class="label">Repos Tracked</div>
-                    <div class="value">{{ data.data_sources.github.repos_tracked }}</div>
-                </div>
-                <div class="meta-item">
-                    <button class="refresh-btn" onclick="refreshData()">Refresh Data</button>
-                </div>
-            </div>
-        </header>
 
-        <!-- DETECTED NARRATIVES -->
-        <section>
-            <h2>Detected Narratives <span class="badge">{{ data.narratives|length }} found</span></h2>
-            {% for n in data.narratives %}
-            <div class="narrative-card">
-                <div class="narrative-header">
-                    <div class="narrative-title">{{ loop.index }}. {{ n.narrative }}</div>
-                    <div class="narrative-score {% if n.score > 50 %}high{% elif n.score > 20 %}medium{% else %}low{% endif %}">
-                        Score: {{ n.score }}
-                    </div>
-                </div>
-                <div style="color: var(--text-dim); font-size: 0.88rem;">
-                    {{ n.signal_count }} signal{{ "s" if n.signal_count != 1 else "" }} from {{ n.sources|join(", ") }}
-                </div>
-                <div class="signal-list">
-                    {% for s in n.signals %}
-                    <div class="signal-item">
-                        <span class="signal-source {{ s.source }}">{{ s.source }}</span>
-                        <span><strong>{{ s.signal }}</strong> — {{ s.evidence }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endfor %}
-        </section>
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Aggregating signals...</div>
+</div>
 
-        <!-- BUILD IDEAS -->
-        <section>
-            <h2>Build Ideas <span class="badge">{{ data.build_ideas|length }} ideas</span></h2>
-            {% for idea in data.build_ideas %}
-            <div class="idea-card">
-                <div class="idea-narrative">{{ idea.tied_narrative }}</div>
-                <div class="idea-title">{{ loop.index }}. {{ idea.title }}</div>
-                <div class="idea-description">{{ idea.description }}</div>
-                <div class="idea-meta">
-                    <div class="idea-meta-item">
-                        <div class="label">Target Users</div>
-                        <div class="value">{{ idea.target_users }}</div>
-                    </div>
-                    <div class="idea-meta-item">
-                        <div class="label">Solana Integration</div>
-                        <div class="value">{{ idea.solana_integration }}</div>
-                    </div>
-                    <div class="idea-meta-item">
-                        <div class="label">Complexity</div>
-                        <div class="value">{{ idea.complexity }}</div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </section>
+<!-- Sticky Header -->
+<header class="sticky-header" id="stickyHeader">
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="header-logo">S</div>
+      <span class="header-title">Narrative Radar</span>
+      <span class="header-subtitle">{{ d.period|default('Last 14 days') }}</span>
+    </div>
+    <div class="header-stats">
+      {% if d.stats.tvl_usd is not none %}
+      <div class="header-stat">
+        <span class="header-stat-label">TVL</span>
+        <span class="header-stat-value green">${{ '{:,.0f}'.format((d.stats.tvl_usd|default(0)) / 1e9) }}B</span>
+      </div>
+      {% endif %}
+      {% if d.stats.avg_tps is not none %}
+      <div class="header-stat">
+        <span class="header-stat-label">Avg TPS</span>
+        <span class="header-stat-value purple">{{ '{:,.0f}'.format(d.stats.avg_tps|default(0)) }}</span>
+      </div>
+      {% endif %}
+      <div class="header-stat">
+        <span class="header-stat-label">Signals</span>
+        <span class="header-stat-value">{{ d.stats.signals_total|default(0) }}</span>
+      </div>
+      <div class="header-stat">
+        <span class="header-stat-label">Narratives</span>
+        <span class="header-stat-value">{{ d.narratives|default([])|length }}</span>
+      </div>
+    </div>
+  </div>
+</header>
 
-        <!-- RAW DATA PANELS -->
-        <section>
-            <h2>Supporting Data</h2>
-            <div class="data-grid">
-                <!-- Most Active Repos -->
-                <div class="data-panel">
-                    <h3>Most Active Solana Repos (14d)</h3>
-                    <table>
-                        <tr><th>Repo</th><th>Commits</th><th>Stars</th></tr>
-                        {% for r in data.github_data.most_active_repos[:8] %}
-                        <tr>
-                            <td>{{ r.repo }}</td>
-                            <td>{{ r.recent_commits }}</td>
-                            <td>{{ r.stars }}</td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </div>
+<main class="container">
 
-                <!-- Top Protocols -->
-                <div class="data-panel">
-                    <h3>Top Solana Protocols by TVL</h3>
-                    <table>
-                        <tr><th>Protocol</th><th>TVL</th><th>7d Change</th></tr>
-                        {% for p in data.onchain_data.top_protocols[:8] %}
-                        <tr>
-                            <td>{{ p.name }}</td>
-                            <td>${{ "%.0f"|format(p.tvl_usd / 1000000) }}M</td>
-                            <td class="{% if p.change_7d_pct > 0 %}positive{% elif p.change_7d_pct < 0 %}negative{% endif %}">
-                                {{ "%+.1f"|format(p.change_7d_pct) }}%
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </div>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-eyebrow">Solana Ecosystem Intelligence</div>
+    <h1>Narrative <span class="gradient-text">Detection</span> Dashboard</h1>
+    <p class="hero-description">
+      Multi-source signal aggregation across developer activity, DeFi metrics, and community discourse.
+      Surfaces emerging narratives before they become consensus.
+    </p>
+    <div class="hero-meta">
+      <span>Generated: {{ d.generated_at|default('—') }}</span>
+      <span>Period: {{ d.period|default('Last 14 days') }}</span>
+      {% if d.has_previous|default(false) %}
+      <span class="text-green">Trend deltas active</span>
+      {% endif %}
+    </div>
+  </section>
 
-                <!-- TVL Trend -->
-                <div class="data-panel">
-                    <h3>Solana TVL (14-day trend)</h3>
-                    {% if data.onchain_data.tvl.daily_tvl %}
-                    <div style="display:flex;align-items:flex-end;gap:4px;height:120px;margin-top:10px;">
-                        {% set ns = namespace(max_tvl=0) %}
-                        {% for d in data.onchain_data.tvl.daily_tvl %}
-                            {% if d.tvl > ns.max_tvl %}{% set ns.max_tvl = d.tvl %}{% endif %}
-                        {% endfor %}
-                        {% for d in data.onchain_data.tvl.daily_tvl %}
-                        <div style="flex:1;background:var(--accent);border-radius:3px 3px 0 0;height:{{ (d.tvl / ns.max_tvl * 100)|int }}%;min-width:8px;" title="{{ d.date }}: ${{ '%.2f'|format(d.tvl / 1000000000) }}B"></div>
-                        {% endfor %}
-                    </div>
-                    <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-dim);margin-top:4px;">
-                        <span>{{ data.onchain_data.tvl.daily_tvl[0].date }}</span>
-                        <span>{{ data.onchain_data.tvl.daily_tvl[-1].date }}</span>
-                    </div>
-                    {% endif %}
-                </div>
+  <!-- STAT CARDS -->
+  <section class="stats-grid">
+    <div class="stat-card glow-purple animate-in">
+      <div class="stat-card-label">GitHub Repos Tracked</div>
+      <div class="stat-card-value">{{ d.stats.github_repos|default(0) }}</div>
+      <div class="stat-card-sub">{{ d.stats.github_probes|default(0) }} narrative probes</div>
+    </div>
+    <div class="stat-card animate-in">
+      <div class="stat-card-label">Reddit Posts</div>
+      <div class="stat-card-value">{{ d.stats.reddit_posts|default(0) }}</div>
+    </div>
+    <div class="stat-card animate-in">
+      <div class="stat-card-label">SE Questions</div>
+      <div class="stat-card-value">{{ d.stats.se_questions|default(0) }}</div>
+    </div>
+    <div class="stat-card glow-green animate-in">
+      <div class="stat-card-label">Total Signals</div>
+      <div class="stat-card-value text-green">{{ d.stats.signals_total|default(0) }}</div>
+    </div>
+    {% if d.stats.tvl_usd is not none %}
+    <div class="stat-card animate-in">
+      <div class="stat-card-label">Total Value Locked</div>
+      <div class="stat-card-value">${{ '{:,.2f}'.format((d.stats.tvl_usd|default(0)) / 1e9) }}B</div>
+      {% if d.defi and d.defi.tvl and d.defi.tvl.change_14d_pct is not none %}
+      <div class="stat-card-sub {% if d.defi.tvl.change_14d_pct >= 0 %}text-green{% else %}text-warning{% endif %}">
+        {{ '{:+.1f}'.format(d.defi.tvl.change_14d_pct) }}% (14d)
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% if d.stats.avg_tps is not none %}
+    <div class="stat-card animate-in">
+      <div class="stat-card-label">Avg TPS</div>
+      <div class="stat-card-value">{{ '{:,.0f}'.format(d.stats.avg_tps|default(0)) }}</div>
+    </div>
+    {% endif %}
+    {% if d.stats.dex_volume_24h is not none %}
+    <div class="stat-card animate-in">
+      <div class="stat-card-label">DEX Volume (24h)</div>
+      <div class="stat-card-value">${{ '{:,.0f}'.format((d.stats.dex_volume_24h|default(0)) / 1e6) }}M</div>
+    </div>
+    {% endif %}
+    {% if d.defi and d.defi.stablecoins and d.defi.stablecoins.total_mcap_usd is not none %}
+    <div class="stat-card animate-in">
+      <div class="stat-card-label">Stablecoin Mcap</div>
+      <div class="stat-card-value">${{ '{:,.1f}'.format(d.defi.stablecoins.total_mcap_usd / 1e9) }}B</div>
+    </div>
+    {% endif %}
+  </section>
 
-                <!-- Stablecoins -->
-                <div class="data-panel">
-                    <h3>Stablecoins on Solana</h3>
-                    {% if data.onchain_data.stablecoins.total_stablecoin_mcap_solana %}
-                    <div style="font-size:1.3rem;font-weight:700;color:var(--accent2);margin-bottom:12px;">
-                        ${{ "%.2f"|format(data.onchain_data.stablecoins.total_stablecoin_mcap_solana / 1000000000) }}B total
-                    </div>
-                    {% endif %}
-                    <table>
-                        <tr><th>Stablecoin</th><th>Market Cap (Solana)</th></tr>
-                        {% for s in data.onchain_data.stablecoins.get("top_stablecoins", [])[:6] %}
-                        <tr>
-                            <td>{{ s.name }} ({{ s.symbol }})</td>
-                            <td>${{ "%.0f"|format(s.solana_mcap_usd / 1000000) }}M</td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </div>
+  <!-- NAVIGATION -->
+  <nav class="nav-pills">
+    <a href="#narratives" class="nav-pill active">Narratives</a>
+    <a href="#ideas" class="nav-pill">Build Ideas</a>
+    <a href="#charts" class="nav-pill">Charts</a>
+    <a href="#github-data" class="nav-pill">GitHub</a>
+    <a href="#defi-data" class="nav-pill">DeFi</a>
+    <a href="#social-data" class="nav-pill">Social</a>
+  </nav>
 
-                <!-- Network Stats -->
-                <div class="data-panel">
-                    <h3>Network Stats</h3>
-                    <table>
-                        <tr><td>Average TPS</td><td>{{ data.onchain_data.network_performance.get("avg_tps", "N/A") }}</td></tr>
-                        <tr><td>Total SOL Supply</td><td>{{ "%.0f"|format(data.onchain_data.supply.get("total_sol", 0)) }}M</td></tr>
-                        <tr><td>Circulating SOL</td><td>{{ "%.0f"|format(data.onchain_data.supply.get("circulating_sol", 0)) }}M</td></tr>
-                        {% if data.onchain_data.tvl.tvl_change_14d_pct is defined %}
-                        <tr>
-                            <td>TVL 14d Change</td>
-                            <td class="{% if data.onchain_data.tvl.tvl_change_14d_pct > 0 %}positive{% else %}negative{% endif %}">
-                                {{ "%+.1f"|format(data.onchain_data.tvl.tvl_change_14d_pct) }}%
-                            </td>
-                        </tr>
-                        {% endif %}
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <footer>
-            <p>Solana Narrative Detector v1.0.0 — Built by an autonomous AI agent</p>
-            <p>Data sources: <a href="https://github.com">GitHub API</a> | <a href="https://defillama.com">DeFiLlama</a> | <a href="https://solana.com">Solana RPC</a></p>
-            <p style="margin-top:8px;">API endpoints: <code>/api/narratives</code> | <code>/api/signals</code> | <code>/api/refresh</code></p>
-        </footer>
+  <!-- ================================================================ -->
+  <!-- NARRATIVES SECTION -->
+  <!-- ================================================================ -->
+  <section id="narratives">
+    <div class="section-header">
+      <h2 class="section-title">Detected <span class="accent">Narratives</span></h2>
+      <span class="section-count">{{ d.narratives|default([])|length }} narratives &middot; ranked by composite score</span>
     </div>
 
-    <script>
-        async function refreshData() {
-            const btn = document.querySelector('.refresh-btn');
-            btn.disabled = true;
-            btn.textContent = 'Refreshing...';
-            try {
-                await fetch('/api/refresh');
-                window.location.reload();
-            } catch (e) {
-                btn.textContent = 'Error — retry';
-                btn.disabled = false;
+    {% if d.narratives|default([])|length == 0 %}
+    <div class="empty-state">No narratives detected for this period.</div>
+    {% else %}
+    <div class="narratives-grid">
+      {% for n in d.narratives|default([]) %}
+      <div class="narrative-card animate-in" data-narrative-idx="{{ loop.index0 }}">
+        <div class="narrative-card-header">
+          <div class="narrative-info">
+            <div class="narrative-name">
+              {{ n.name }}
+              {% if n.discovered|default(false) %}
+              <span class="discovered-badge">Auto-Discovered</span>
+              {% endif %}
+            </div>
+            <div class="narrative-meta">
+              <!-- Delta badge -->
+              {% set delta = n.delta|default('stable') %}
+              {% if delta == 'rising' %}
+              <span class="delta-badge rising">&#9650; Rising</span>
+              {% elif delta == 'fading' %}
+              <span class="delta-badge fading">&#9660; Fading</span>
+              {% elif delta == 'new' %}
+              <span class="delta-badge new">&#9733; NEW</span>
+              {% else %}
+              <span class="delta-badge stable">&#8594; Stable</span>
+              {% endif %}
+
+              {% if n.score_change is defined and n.score_change is not none and n.score_change != 0 %}
+              <span class="score-change {% if n.score_change > 0 %}positive{% else %}negative{% endif %}">
+                {{ '{:+.1f}'.format(n.score_change) }}
+              </span>
+              {% endif %}
+
+              <span class="signal-count">{{ n.signal_count|default(0) }} signals</span>
+
+              <div class="source-badges">
+                {% for src in n.sources|default([]) %}
+                <span class="source-badge {{ src }}">{{ src }}</span>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Score ring -->
+          {% set score = n.score|default(0) %}
+          {% set circumference = 2 * 3.14159 * 22 %}
+          {% set offset = circumference - (score / 100) * circumference %}
+          {% if score >= 70 %}
+            {% set ring_color = '#14F195' %}
+          {% elif score >= 40 %}
+            {% set ring_color = '#f0b429' %}
+          {% else %}
+            {% set ring_color = '#ef4444' %}
+          {% endif %}
+          <div class="narrative-score-ring">
+            <svg viewBox="0 0 56 56">
+              <circle class="ring-bg" cx="28" cy="28" r="22"/>
+              <circle class="ring-fg" cx="28" cy="28" r="22"
+                stroke="{{ ring_color }}"
+                stroke-dasharray="{{ '{:.1f}'.format(circumference) }}"
+                stroke-dashoffset="{{ '{:.1f}'.format(offset) }}"/>
+            </svg>
+            <span class="narrative-score-label" style="color: {{ ring_color }}">{{ '{:.0f}'.format(score) }}</span>
+          </div>
+        </div>
+
+        {% if n.signals|default([])|length > 0 %}
+        <button class="signal-toggle" onclick="toggleSignals(this)">
+          Show {{ n.signals|length }} signal{{ 's' if n.signals|length != 1 else '' }}
+          <span class="chevron">&#9662;</span>
+        </button>
+        <div class="narrative-signals">
+          <div class="signals-list">
+            {% for sig in n.signals|default([]) %}
+            <div class="signal-item">
+              <span class="signal-source-tag">{{ sig.source|default('—') }}</span>
+              <span class="signal-text">{{ sig.text|default('') }}</span>
+              <span class="signal-strength">{{ sig.strength_raw|default('') }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- BUILD IDEAS SECTION -->
+  <!-- ================================================================ -->
+  <section id="ideas">
+    <div class="section-header">
+      <h2 class="section-title">Build <span class="accent">Ideas</span></h2>
+      <span class="section-count">{{ d.ideas|default([])|length }} ideas generated from top narratives</span>
+    </div>
+
+    {% if d.ideas|default([])|length == 0 %}
+    <div class="empty-state">No build ideas generated for this period.</div>
+    {% else %}
+    <div class="ideas-grid">
+      {% for idea in d.ideas|default([]) %}
+      <div class="idea-card animate-in">
+        <div class="idea-number">Idea {{ loop.index }}</div>
+        <div class="idea-title">{{ idea.title }}</div>
+        <div class="idea-description">{{ idea.description }}</div>
+
+        <div class="idea-details">
+          {% if idea.solana_stack %}
+          <div class="idea-detail full-width">
+            <div class="idea-detail-label">Solana Stack</div>
+            <div class="idea-detail-value">{{ idea.solana_stack }}</div>
+          </div>
+          {% endif %}
+          {% if idea.target_users %}
+          <div class="idea-detail full-width">
+            <div class="idea-detail-label">Target Users</div>
+            <div class="idea-detail-value">{{ idea.target_users }}</div>
+          </div>
+          {% endif %}
+        </div>
+
+        {% if idea.tied_narrative %}
+        <div class="idea-narrative-link">
+          <span>{{ idea.tied_narrative }}</span>
+          {% if idea.narrative_score is not none %}
+          <span class="idea-narrative-score">{{ '{:.0f}'.format(idea.narrative_score) }}</span>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- CHARTS SECTION -->
+  <!-- ================================================================ -->
+  <section id="charts">
+    <div class="section-header">
+      <h2 class="section-title">Analytics <span class="accent">Charts</span></h2>
+    </div>
+
+    <div class="charts-grid">
+      <!-- Narrative Scores Bar Chart -->
+      <div class="chart-card full-width">
+        <div class="chart-title">Narrative Scores (composite, 0-100)</div>
+        <div class="chart-container bar-chart">
+          <canvas id="narrativeBarChart"></canvas>
+        </div>
+      </div>
+
+      <!-- TVL Line Chart -->
+      {% if d.defi and d.defi.tvl and d.defi.tvl.daily|default([])|length > 0 %}
+      <div class="chart-card">
+        <div class="chart-title">TVL Trend ({{ d.period|default('14d') }})</div>
+        <div class="chart-container">
+          <canvas id="tvlLineChart" height="240"></canvas>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Source Diversity Radar -->
+      {% if d.narratives|default([])|length > 0 %}
+      <div class="chart-card">
+        <div class="chart-title">Source Diversity — {{ d.narratives[0].name }}</div>
+        <div class="chart-container">
+          <canvas id="sourceRadarChart" height="240"></canvas>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Protocol Category Doughnut -->
+      {% if d.defi and d.defi.protocols|default([])|length > 0 %}
+      <div class="chart-card">
+        <div class="chart-title">Protocol Categories by TVL</div>
+        <div class="chart-container">
+          <canvas id="categoryDoughnut" height="240"></canvas>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- DEX Volume Breakdown -->
+      {% if d.defi and d.defi.dex and d.defi.dex.top_dexes|default([])|length > 0 %}
+      <div class="chart-card">
+        <div class="chart-title">DEX Volume Breakdown (24h)</div>
+        <div class="chart-container">
+          <canvas id="dexDoughnut" height="240"></canvas>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SUPPORTING DATA: GITHUB -->
+  <!-- ================================================================ -->
+  <section id="github-data" class="data-section">
+    <div class="section-header">
+      <h2 class="section-title">GitHub <span class="accent">Activity</span></h2>
+    </div>
+    <div class="data-grid">
+      <!-- Trending Repos -->
+      {% if d.github and d.github.trending|default([])|length > 0 %}
+      <div class="data-panel">
+        <div class="data-panel-header">
+          Trending Repositories
+          <span class="data-panel-count">{{ d.github.trending|length }}</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Repository</th>
+              <th style="text-align:right">Stars</th>
+              <th>Topics</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for repo in d.github.trending|default([]) %}
+            <tr>
+              <td>
+                <div class="name-cell">{{ repo.name }}</div>
+                {% if repo.description %}
+                <div class="muted" style="font-size:11px; margin-top:2px; white-space:normal;">{{ repo.description|truncate(80) }}</div>
+                {% endif %}
+              </td>
+              <td class="number-cell">{{ '{:,}'.format(repo.stars|default(0)) }}</td>
+              <td>
+                <div class="tag-list">
+                  {% for t in repo.topics|default([]) %}{% if loop.index <= 4 %}
+                  <span class="tag">{{ t }}</span>
+                  {% endif %}{% endfor %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <!-- New Repos -->
+      {% if d.github and d.github.new_repos|default([])|length > 0 %}
+      <div class="data-panel">
+        <div class="data-panel-header">
+          New Repositories
+          <span class="data-panel-count">{{ d.github.new_repos|length }}</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Repository</th>
+              <th style="text-align:right">Stars</th>
+              <th>Topics</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for repo in d.github.new_repos|default([]) %}
+            <tr>
+              <td>
+                <div class="name-cell">{{ repo.name }}</div>
+                {% if repo.description %}
+                <div class="muted" style="font-size:11px; margin-top:2px; white-space:normal;">{{ repo.description|truncate(80) }}</div>
+                {% endif %}
+              </td>
+              <td class="number-cell">{{ '{:,}'.format(repo.stars|default(0)) }}</td>
+              <td>
+                <div class="tag-list">
+                  {% for t in repo.topics|default([]) %}{% if loop.index <= 4 %}
+                  <span class="tag">{{ t }}</span>
+                  {% endif %}{% endfor %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SUPPORTING DATA: DEFI -->
+  <!-- ================================================================ -->
+  <section id="defi-data" class="data-section">
+    <div class="section-header">
+      <h2 class="section-title">DeFi <span class="accent">Metrics</span></h2>
+    </div>
+    <div class="data-grid">
+      <!-- Top Protocols by TVL -->
+      {% if d.defi and d.defi.protocols|default([])|length > 0 %}
+      <div class="data-panel">
+        <div class="data-panel-header">
+          Top Protocols by TVL
+          <span class="data-panel-count">{{ d.defi.protocols|length }}</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Protocol</th>
+              <th>Category</th>
+              <th style="text-align:right">TVL</th>
+              <th style="text-align:right">7d %</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in d.defi.protocols|default([]) %}
+            <tr>
+              <td class="name-cell">{{ p.name }}</td>
+              <td><span class="tag">{{ p.category|default('—') }}</span></td>
+              <td class="number-cell">${{ '{:,.0f}'.format((p.tvl_usd|default(0)) / 1e6) }}M</td>
+              <td class="change-cell {% if (p.change_7d_pct|default(0)) >= 0 %}positive{% else %}negative{% endif %}">
+                {{ '{:+.1f}'.format(p.change_7d_pct|default(0)) }}%
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <!-- Top Fee Earners -->
+      {% if d.defi and d.defi.fees|default([])|length > 0 %}
+      <div class="data-panel">
+        <div class="data-panel-header">
+          Top Fee Earners (24h)
+          <span class="data-panel-count">{{ d.defi.fees|length }}</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Protocol</th>
+              <th style="text-align:right">Fees 24h</th>
+              <th style="text-align:right">7d %</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in d.defi.fees|default([]) %}
+            <tr>
+              <td class="name-cell">{{ f.name }}</td>
+              <td class="number-cell">${{ '{:,.0f}'.format(f.fees_24h|default(0)) }}</td>
+              <td class="change-cell {% if (f.change_7d_pct|default(0)) >= 0 %}positive{% else %}negative{% endif %}">
+                {{ '{:+.1f}'.format(f.change_7d_pct|default(0)) }}%
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <!-- DEX Volume -->
+      {% if d.defi and d.defi.dex and d.defi.dex.top_dexes|default([])|length > 0 %}
+      <div class="data-panel">
+        <div class="data-panel-header">
+          DEX Volume (24h)
+          <span class="data-panel-count">${{ '{:,.0f}'.format((d.defi.dex.total_24h_usd|default(0)) / 1e6) }}M total</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>DEX</th>
+              <th style="text-align:right">Volume 24h</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for dx in d.defi.dex.top_dexes|default([]) %}
+            <tr>
+              <td class="name-cell">{{ dx.name }}</td>
+              <td class="number-cell">${{ '{:,.0f}'.format((dx.volume_24h|default(0)) / 1e6) }}M</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <!-- Stablecoins -->
+      {% if d.defi and d.defi.stablecoins and d.defi.stablecoins.assets|default([])|length > 0 %}
+      <div class="data-panel">
+        <div class="data-panel-header">
+          Stablecoins on Solana
+          <span class="data-panel-count">${{ '{:,.1f}'.format((d.defi.stablecoins.total_mcap_usd|default(0)) / 1e9) }}B total</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th style="text-align:right">Market Cap</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sc in d.defi.stablecoins.assets|default([]) %}
+            <tr>
+              <td class="name-cell">{{ sc.name }} <span class="muted">({{ sc.symbol }})</span></td>
+              <td class="number-cell">${{ '{:,.0f}'.format((sc.mcap_usd|default(0)) / 1e6) }}M</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <!-- Network Stats -->
+      {% if d.defi and d.defi.network %}
+      <div class="data-panel">
+        <div class="data-panel-header">
+          Network Stats
+        </div>
+        <table class="data-table">
+          <tbody>
+            {% if d.defi.network.avg_tps is not none %}
+            <tr>
+              <td>Average TPS</td>
+              <td class="number-cell">{{ '{:,.0f}'.format(d.defi.network.avg_tps) }}</td>
+            </tr>
+            {% endif %}
+            {% if d.defi.network.total_sol is not none %}
+            <tr>
+              <td>Total SOL Supply</td>
+              <td class="number-cell">{{ '{:,.0f}'.format(d.defi.network.total_sol) }}</td>
+            </tr>
+            {% endif %}
+            {% if d.defi.network.circulating_sol is not none %}
+            <tr>
+              <td>Circulating SOL</td>
+              <td class="number-cell">{{ '{:,.0f}'.format(d.defi.network.circulating_sol) }}</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SUPPORTING DATA: SOCIAL -->
+  <!-- ================================================================ -->
+  <section id="social-data" class="data-section">
+    <div class="section-header">
+      <h2 class="section-title">Community <span class="accent">Signals</span></h2>
+    </div>
+    <div class="data-grid">
+      <!-- Reddit -->
+      {% if d.social and d.social.reddit_top|default([])|length > 0 %}
+      <div class="data-panel">
+        <div class="data-panel-header">
+          Reddit — Top Posts
+          <span class="data-panel-count">{{ d.social.reddit_top|length }}</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th style="text-align:right">Score</th>
+              <th style="text-align:right">Comments</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for post in d.social.reddit_top|default([]) %}
+            <tr>
+              <td class="name-cell" style="max-width:320px">{{ post.title|truncate(90) }}</td>
+              <td class="number-cell">{{ '{:,}'.format(post.score|default(0)) }}</td>
+              <td class="number-cell">{{ '{:,}'.format(post.comments|default(0)) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <!-- StackExchange -->
+      {% if d.social and d.social.se_top|default([])|length > 0 %}
+      <div class="data-panel">
+        <div class="data-panel-header">
+          Solana StackExchange — Top Questions
+          <span class="data-panel-count">{{ d.social.se_top|length }}</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Question</th>
+              <th style="text-align:right">Score</th>
+              <th>Tags</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for q in d.social.se_top|default([]) %}
+            <tr>
+              <td class="name-cell" style="max-width:280px">{{ q.title|truncate(80) }}</td>
+              <td class="number-cell">{{ q.score|default(0) }}</td>
+              <td>
+                <div class="tag-list">
+                  {% for t in q.tags|default([]) %}{% if loop.index <= 3 %}
+                  <span class="tag">{{ t }}</span>
+                  {% endif %}{% endfor %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <!-- Forum -->
+      {% if d.social and d.social.forum|default([])|length > 0 %}
+      <div class="data-panel">
+        <div class="data-panel-header">
+          Forum Discussions
+          <span class="data-panel-count">{{ d.social.forum|length }}</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in d.social.forum|default([]) %}
+            <tr>
+              <td class="name-cell" style="max-width:360px">{{ f.title|truncate(100) }}</td>
+              <td><span class="tag">{{ f.source|default('Forum') }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-brand">Solana Narrative Radar</div>
+    <p class="footer-text">
+      Multi-source signal detection for the Solana ecosystem.
+      Data aggregated from GitHub, DeFiLlama, Reddit, Solana StackExchange, and on-chain metrics.
+    </p>
+    <p class="footer-text" style="margin-top:8px;">
+      Built for the <a href="https://earn.superteam.fun/" target="_blank" rel="noopener">Superteam Earn</a> bounty.
+    </p>
+  </footer>
+
+</main>
+
+<!-- ================================================================ -->
+<!-- CHART.JS INITIALIZATION -->
+<!-- ================================================================ -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  // --- Loading state ---
+  const overlay = document.getElementById('loadingOverlay');
+  setTimeout(function() { overlay.classList.add('hidden'); }, 600);
+
+  // --- Sticky header scroll shadow ---
+  const header = document.getElementById('stickyHeader');
+  window.addEventListener('scroll', function() {
+    header.classList.toggle('scrolled', window.scrollY > 10);
+  }, { passive: true });
+
+  // --- Nav pill active state ---
+  document.querySelectorAll('.nav-pill').forEach(function(pill) {
+    pill.addEventListener('click', function() {
+      document.querySelectorAll('.nav-pill').forEach(function(p) { p.classList.remove('active'); });
+      pill.classList.add('active');
+    });
+  });
+
+  // --- Chart.js global config ---
+  Chart.defaults.color = '#9898aa';
+  Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+  Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.plugins.legend.labels.boxWidth = 12;
+  Chart.defaults.plugins.legend.labels.padding = 16;
+
+  // Shared gradient helper
+  function makeGradient(ctx, c1, c2) {
+    var g = ctx.createLinearGradient(0, 0, ctx.canvas.width, 0);
+    g.addColorStop(0, c1);
+    g.addColorStop(1, c2);
+    return g;
+  }
+
+  function scoreColor(score) {
+    if (score >= 70) return '#14F195';
+    if (score >= 40) return '#f0b429';
+    return '#ef4444';
+  }
+
+  // ==================================================================
+  // 1. NARRATIVE SCORES HORIZONTAL BAR
+  // ==================================================================
+  {% if d.narratives|default([])|length > 0 %}
+  (function() {
+    var ctx = document.getElementById('narrativeBarChart');
+    if (!ctx) return;
+
+    var names = [{% for n in d.narratives %}'{{ n.name|replace("'", "\\'") }}'{% if not loop.last %},{% endif %}{% endfor %}];
+    var scores = [{% for n in d.narratives %}{{ n.score|default(0) }}{% if not loop.last %},{% endif %}{% endfor %}];
+    var colors = scores.map(function(s) { return scoreColor(s); });
+
+    // Dynamic height based on number of narratives
+    var barHeight = 32;
+    var chartHeight = Math.max(200, names.length * barHeight + 60);
+    ctx.parentElement.style.height = chartHeight + 'px';
+    ctx.height = chartHeight;
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: names,
+        datasets: [{
+          data: scores,
+          backgroundColor: colors.map(function(c) { return c + '33'; }),
+          borderColor: colors,
+          borderWidth: 1.5,
+          borderRadius: 4,
+          barPercentage: 0.7,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1e1e2a',
+            borderColor: '#3a3a4f',
+            borderWidth: 1,
+            titleColor: '#e8e8f0',
+            bodyColor: '#9898aa',
+            cornerRadius: 8,
+            padding: 12,
+            callbacks: {
+              label: function(ctx) { return 'Score: ' + ctx.parsed.x.toFixed(1); }
             }
+          }
+        },
+        scales: {
+          x: {
+            min: 0, max: 100,
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: { stepSize: 20 }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { font: { weight: '500' } }
+          }
         }
-    </script>
+      }
+    });
+  })();
+  {% endif %}
+
+  // ==================================================================
+  // 2. TVL LINE CHART
+  // ==================================================================
+  {% if d.defi and d.defi.tvl and d.defi.tvl.daily|default([])|length > 0 %}
+  (function() {
+    var ctx = document.getElementById('tvlLineChart');
+    if (!ctx) return;
+
+    var labels = [{% for dp in d.defi.tvl.daily %}'{{ dp.date }}'{% if not loop.last %},{% endif %}{% endfor %}];
+    var data = [{% for dp in d.defi.tvl.daily %}{{ dp.tvl }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+    var context2d = ctx.getContext('2d');
+    var gradient = context2d.createLinearGradient(0, 0, 0, 240);
+    gradient.addColorStop(0, 'rgba(20, 241, 149, 0.2)');
+    gradient.addColorStop(1, 'rgba(20, 241, 149, 0.0)');
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'TVL (USD)',
+          data: data,
+          borderColor: '#14F195',
+          backgroundColor: gradient,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#14F195',
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1e1e2a',
+            borderColor: '#3a3a4f',
+            borderWidth: 1,
+            titleColor: '#e8e8f0',
+            bodyColor: '#9898aa',
+            cornerRadius: 8,
+            padding: 12,
+            callbacks: {
+              label: function(ctx) {
+                var val = ctx.parsed.y;
+                if (val >= 1e9) return '$' + (val / 1e9).toFixed(2) + 'B';
+                if (val >= 1e6) return '$' + (val / 1e6).toFixed(0) + 'M';
+                return '$' + val.toLocaleString();
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { maxTicksLimit: 7 }
+          },
+          y: {
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: {
+              callback: function(val) {
+                if (val >= 1e9) return '$' + (val / 1e9).toFixed(1) + 'B';
+                if (val >= 1e6) return '$' + (val / 1e6).toFixed(0) + 'M';
+                return '$' + val;
+              }
+            }
+          }
+        },
+        interaction: { mode: 'index', intersect: false }
+      }
+    });
+  })();
+  {% endif %}
+
+  // ==================================================================
+  // 3. SOURCE DIVERSITY RADAR (top narrative)
+  // ==================================================================
+  {% if d.narratives|default([])|length > 0 %}
+  (function() {
+    var ctx = document.getElementById('sourceRadarChart');
+    if (!ctx) return;
+
+    // Count signal strengths per source for the top narrative
+    var sourceMap = {};
+    {% for sig in d.narratives[0].signals|default([]) %}
+    (function() {
+      var src = '{{ sig.source|default("unknown") }}';
+      var str = {{ sig.strength_raw|default(0) }};
+      if (!sourceMap[src]) sourceMap[src] = 0;
+      sourceMap[src] += str;
+    })();
+    {% endfor %}
+
+    // Ensure we always have the four canonical sources
+    var allSources = ['github', 'defi', 'social', 'onchain'];
+    allSources.forEach(function(s) { if (!sourceMap[s]) sourceMap[s] = 0; });
+    var labels = Object.keys(sourceMap);
+    var values = labels.map(function(l) { return sourceMap[l]; });
+
+    new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: labels.map(function(l) { return l.charAt(0).toUpperCase() + l.slice(1); }),
+        datasets: [{
+          label: '{{ d.narratives[0].name|replace("'", "\\'") }}',
+          data: values,
+          borderColor: '#9945FF',
+          backgroundColor: 'rgba(153, 69, 255, 0.15)',
+          borderWidth: 2,
+          pointBackgroundColor: '#9945FF',
+          pointRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1e1e2a',
+            borderColor: '#3a3a4f',
+            borderWidth: 1,
+            cornerRadius: 8,
+            padding: 12,
+          }
+        },
+        scales: {
+          r: {
+            angleLines: { color: 'rgba(255,255,255,0.06)' },
+            grid: { color: 'rgba(255,255,255,0.06)' },
+            pointLabels: { font: { size: 12, weight: '500' }, color: '#e8e8f0' },
+            ticks: { display: false },
+            beginAtZero: true,
+          }
+        }
+      }
+    });
+  })();
+  {% endif %}
+
+  // ==================================================================
+  // 4. PROTOCOL CATEGORY DOUGHNUT
+  // ==================================================================
+  {% if d.defi and d.defi.protocols|default([])|length > 0 %}
+  (function() {
+    var ctx = document.getElementById('categoryDoughnut');
+    if (!ctx) return;
+
+    // Aggregate TVL per category
+    var catMap = {};
+    {% for p in d.defi.protocols %}
+    (function() {
+      var cat = '{{ p.category|default("Other") }}';
+      var tvl = {{ p.tvl_usd|default(0) }};
+      if (!catMap[cat]) catMap[cat] = 0;
+      catMap[cat] += tvl;
+    })();
+    {% endfor %}
+
+    var labels = Object.keys(catMap);
+    var values = labels.map(function(l) { return catMap[l]; });
+
+    var palette = [
+      '#9945FF', '#14F195', '#38bdf8', '#f0b429', '#ef4444',
+      '#818cf8', '#fb7185', '#34d399', '#fbbf24', '#a78bfa',
+      '#67e8f9', '#f472b6'
+    ];
+
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: palette.slice(0, labels.length).map(function(c) { return c + '55'; }),
+          borderColor: palette.slice(0, labels.length),
+          borderWidth: 1.5,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { padding: 12, font: { size: 11 } }
+          },
+          tooltip: {
+            backgroundColor: '#1e1e2a',
+            borderColor: '#3a3a4f',
+            borderWidth: 1,
+            cornerRadius: 8,
+            padding: 12,
+            callbacks: {
+              label: function(ctx) {
+                var val = ctx.parsed;
+                if (val >= 1e9) return ctx.label + ': $' + (val / 1e9).toFixed(2) + 'B';
+                if (val >= 1e6) return ctx.label + ': $' + (val / 1e6).toFixed(0) + 'M';
+                return ctx.label + ': $' + val.toLocaleString();
+              }
+            }
+          }
+        }
+      }
+    });
+  })();
+  {% endif %}
+
+  // ==================================================================
+  // 5. DEX VOLUME DOUGHNUT
+  // ==================================================================
+  {% if d.defi and d.defi.dex and d.defi.dex.top_dexes|default([])|length > 0 %}
+  (function() {
+    var ctx = document.getElementById('dexDoughnut');
+    if (!ctx) return;
+
+    var labels = [{% for dx in d.defi.dex.top_dexes %}'{{ dx.name|replace("'", "\\'") }}'{% if not loop.last %},{% endif %}{% endfor %}];
+    var data = [{% for dx in d.defi.dex.top_dexes %}{{ dx.volume_24h|default(0) }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+    var palette = ['#14F195', '#9945FF', '#38bdf8', '#f0b429', '#ef4444', '#818cf8', '#fb7185', '#34d399'];
+
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: palette.slice(0, labels.length).map(function(c) { return c + '55'; }),
+          borderColor: palette.slice(0, labels.length),
+          borderWidth: 1.5,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { padding: 12, font: { size: 11 } }
+          },
+          tooltip: {
+            backgroundColor: '#1e1e2a',
+            borderColor: '#3a3a4f',
+            borderWidth: 1,
+            cornerRadius: 8,
+            padding: 12,
+            callbacks: {
+              label: function(ctx) {
+                var val = ctx.parsed;
+                if (val >= 1e9) return ctx.label + ': $' + (val / 1e9).toFixed(2) + 'B';
+                if (val >= 1e6) return ctx.label + ': $' + (val / 1e6).toFixed(0) + 'M';
+                return ctx.label + ': $' + val.toLocaleString();
+              }
+            }
+          }
+        }
+      }
+    });
+  })();
+  {% endif %}
+
+});
+
+// ==================================================================
+// Toggle narrative signal details
+// ==================================================================
+function toggleSignals(btn) {
+  var card = btn.closest('.narrative-card');
+  card.classList.toggle('expanded');
+  var isExpanded = card.classList.contains('expanded');
+  btn.childNodes[0].textContent = isExpanded ? 'Hide signals ' : 'Show ' + card.querySelector('.signals-list').children.length + ' signals ';
+}
+</script>
+
 </body>
 </html>
